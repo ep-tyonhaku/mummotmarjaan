@@ -1,0 +1,586 @@
+<!--
+ part of "Käykee joka Kohassa" programming assignment 
+ (c) Eli Parviainen 2019
+-->
+<!DOCTYPE html>
+<meta charset="UTF-8"> 
+<html lang="en">
+  <head>
+    <!-- IE: display using highest available browser version  -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Käykee joka Kohassa</title>
+    <link rel="stylesheet" href="./jokakohassa.css" /> 
+
+
+    <!-- visualization uses Three.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.105.2/build/three.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.105.2/examples/js/renderers/SVGRenderer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.105.2/examples/js/renderers/CSS2DRenderer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.105.2/examples/js/renderers/Projector.js"></script>
+	
+  </head>
+  <body>
+
+    <h1> Käykee joka Kohassa </h1>
+
+
+    <!-- ------------------------------ -->
+    <div id="svgCanvasHolder"> 
+      <!-- SVGrenderer will be placed here by a script -->
+      <!-- label renderer will be placed here by a script -->
+    </div>
+
+    <!-- ------------------------------ -->
+    <table width="100%">
+      <tr>
+	<td><span class="slotHeader"> Ajoajat minuutteina:</span>
+	<td><span class="slotHeader"> Lähtee paikkakunnalta:</span>
+	<td>
+	<td><span class="slotHeader"> Reittiin kuluva aika:</span>
+	</td>
+      </tr>
+
+      <tr>
+	<!-- ------------------------------ -->
+	<td id="minutesHolder" class="slot">
+	  <table>
+	    <tr>
+	      <td><span style="color:#CC0000">punainen</span>  </td>
+	      <td><input id="weightR" type="number" value=10 onchange="updateR()"/></td>
+	    </tr>
+	    <tr>
+	      <td><span style="color:#00CC00">vihreä</span>  </td>
+	      <td><input id="weightG" type="number" value=10 onchange="updateG()"/></td>
+	    </tr>
+	    <tr>
+	      <td><span style=" width:20%;color:#0000CC">sininen</span>  </td>
+	      <td><input id="weightB" type="number" value=10 onchange="updateB()"/></td>
+	    </tr>
+	  </table>
+	</td>
+	<!-- ------------------------------ -->
+
+
+	<!-- ------------------------------ -->
+	<td id="startNodeHolder" class="slot">    
+	  <select id="placeList" onchange="updateStartNode()">
+	    <!-- options with place names will be placed here by a script -->
+	  </select>
+	</td>
+	<!-- ------------------------------ -->
+
+
+	<!-- ------------------------------ -->
+	<td id="buttonHolder" class="slot">
+	  <!-- the button will be activate by a script when data becomes available -->
+	  <button type="button" id="getRouteButton" isActive=0 onclick="getRoute()">(odota dataa)</button>
+	</td>
+	<!-- ------------------------------ -->
+
+	<!-- ------------------------------ -->
+	<td id="timeHolder" class="slot">
+	  <div id="routeTimeDisplay">? min
+	    <!-- route traversal time will be written here by a script -->
+	  </div>
+	</td>
+	<!-- ------------------------------ -->
+
+      </tr>
+    </table>
+
+
+    <br><br><hr>
+    <span class="authorInfo">(c) Eli Parviainen 2019</span>
+
+    <!-- ============================================================ -->
+
+
+<script>
+// ============================================================
+// fetch graph data from json file, then update screen
+(async() => {
+    let resp = await fetch('./joensuu.json');
+    let graphInfo = await resp.json();
+    await svgSetup(document.getElementById("svgCanvasHolder"));
+    return graphInfo;
+})().then(function(graphInfo){
+    canvasHolder = document.getElementById("svgCanvasHolder");
+    canvasHolder.myGraph = graphInfo;
+    updatePlaceCoords(canvasHolder); 
+    screenUpdates(canvasHolder);
+    UIupdates();
+});
+</script>
+
+<script>
+
+// ============================================================
+// explicitly clear the input elements on page reload, 
+// otherwise they seem to persist (mozilla firefox 66.0.5)
+window.onload = function() {
+    document.getElementById('weightR').value = 10;
+    document.getElementById('weightG').value = 10;
+    document.getElementById('weightB').value = 10;
+}
+
+
+// ============================================================
+// the user has chosen a new start node for the route
+function updateStartNode() {
+    const places = document.getElementById("placeList");
+    const canvasHolder = document.getElementById("svgCanvasHolder");
+    canvasHolder.myInput.startNode = places[places.selectedIndex].textContent;
+}
+
+// ============================================================
+// the user has updated run times of colored sections
+function updateR() {
+    const canvasHolder = document.getElementById("svgCanvasHolder");
+    canvasHolder.myInput.red = document.getElementById("weightR").value; }
+function updateG() {
+    const canvasHolder = document.getElementById("svgCanvasHolder");
+    canvasHolder.myInput.green = document.getElementById("weightG").value; }
+function updateB() {
+    const canvasHolder = document.getElementById("svgCanvasHolder");
+    canvasHolder.myInput.blue = document.getElementById("weightB").value; }
+
+
+// ============================================================
+// send graph data to a perl script,  wait for route information,
+// update screen (draw route + set runtime)
+function getRoute() {
+
+    // only run this if graph data is available
+    // (get route button becomes active when data has been fetched)
+    const button = document.getElementById("getRouteButton");
+    if (Boolean(button.getAttribute("isActive"))) {
+
+	// fetch route
+	(async () => {
+	    const canvasHolder = document.getElementById("svgCanvasHolder");
+	    const graphInfo = canvasHolder.myGraph;
+	    const params = canvasHolder.myInput;
+	    var data = JSON.stringify({"nodes":graphInfo.nodes,"edges":graphInfo.edges,
+				       "red":params.red,"green":params.green,
+				       "blue":params.blue,"startNode":params.startNode});
+
+	    const routeJSON = await fetch('./laskereitti.pl', {
+		method: 'POST',
+		headers: {
+		    'Accept': 'application/json', 
+		    'Content-Type': 'application/json; charset=utf-8'
+		},
+		body: data
+	    });
+	    const routeInfo = await routeJSON.json();
+
+	    //  console.log("reitti: "+JSON.stringify(routeInfo));
+	    return routeInfo;
+	})()
+	    .then(function (routeInfo) {
+
+		// draw route
+		var canvasHolder = document.getElementById("svgCanvasHolder");
+		canvasHolder.myRoute = routeInfo;
+		canvasHolder = updatePlaceCoords(canvasHolder);
+		screenUpdates(canvasHolder);
+
+		// display route time
+		var timeDisplay = document.getElementById("routeTimeDisplay");
+		timeDisplay.innerHTML = routeInfo.time+" min";
+
+	    });
+
+    } // endif: graph available
+}
+
+
+// ============================================================
+function updatePlaceCoords(container) {
+    // screen coordinates of nodes are updated when window is resized
+    graphInfo = container.myGraph;
+
+    // size of drawing area
+    var xMargin = container.clientWidth*0.1; var yMargin = container.clientHeight*0.1;
+    var xRangeCanvas = container.clientWidth - 2*xMargin;
+    var yRangeCanvas = container.clientHeight - 2*yMargin;
+
+    // original range of the data
+    // (unnecessary to recompute but keeps code simpler)
+    var placeHash = [];
+    var miny=Infinity, maxy=-Infinity, minx=Infinity, maxx=-Infinity;
+    for (var iind=0; iind<graphInfo.coordinates.length; iind++) {
+	var coord = graphInfo.coordinates[iind];    
+	miny = Math.min(miny, coord.y); maxy = Math.max(maxy, coord.y);
+	minx = Math.min(minx, coord.x); maxx = Math.max(maxx, coord.x);
+    }
+    var yRangeData = maxy-miny; var xRangeData = maxx-minx; 
+
+    // convert data from original range to [0,1]-range, then to screen range
+    // store as a hash for easier reference when drawing edges
+    for (var iind=0; iind<graphInfo.coordinates.length; iind++) {
+	var coord = graphInfo.coordinates[iind];    
+	placeHash[coord.node]=[(coord.x-minx)/xRangeData*xRangeCanvas + xMargin, 
+			       (coord.y-miny)/yRangeData*yRangeCanvas + yMargin];
+    }
+
+    container.myPlaceHash = placeHash;
+    return container;
+}
+
+// ============================================================
+// basic vector operations
+// (not very javascript style as the route draw routine is 
+// a translation from octave code)
+
+const XIND = 0;
+const YIND = 1;
+
+function vector2D_add(v1, v2) {
+    return [v1[XIND]+v2[XIND], v1[YIND]+v2[YIND]];
+}
+
+function vector2D_dotprod(v1, v2) {
+    return [v1[XIND]*v2[XIND]+v1[YIND]*v2[YIND]];
+}
+
+function vector2D_scalarmult(s, v) {
+    return [s*v[XIND], s*v[YIND]];
+}
+
+function vector2D_norm(v) {
+    return Math.sqrt(v[XIND]**2+v[YIND]**2);
+}
+
+function vector2D_neg(v) {
+    return [-v[XIND], -v[YIND]];
+}
+
+// place all nodes at same level 
+const zCoord = -100;
+
+
+// ============================================================
+function drawRoute(container) {
+
+    // only draw the route if it is available
+    if (container.myRoute != null) {
+	var vertices = [];
+	
+
+	const route = container.myRoute.route;
+	const placeHash = container.myPlaceHash;
+
+	var roadMargin = 8; 
+	var uturnMargin = 10;
+
+	// first section is straight, it needs only two first nodes
+	var curr = route[0].from;
+	var next = route[0].to;
+	var currxy = placeHash[curr];
+	var nextxy = placeHash[next];
+
+	// start node is drawn as a black circle
+	var node = document.createElementNS( 'http://www.w3.org/2000/svg', 'circle' );
+	node.setAttribute( 'stroke', 'black' );
+	node.setAttribute( 'fill', 'black' );
+	node.setAttribute( 'r', '10' );
+	var object = new THREE.SVGObject( node.cloneNode() );
+	object.position.x = currxy[0];
+	object.position.y = currxy[1];
+	object.position.z = zCoord; 
+	container.myScene.add(object);
+	
+
+	// vector representation of the first edge of the route
+	// from node to node
+	var fwd1 = vector2D_add(nextxy, vector2D_neg(currxy));
+	// edge length
+	var len1 = vector2D_norm(fwd1);
+	// normalize to length 1
+	fwd1 = vector2D_scalarmult(1/len1, fwd1);
+	// edge normal
+	var side1 = [-fwd1[YIND], fwd1[XIND]];
+
+	// reuse for the next node:
+	var prevfwd = fwd1;
+	var prevside = side1;
+	var prevlen = len1;
+	// start of route line is at the level of the current node but on the side
+	var prevxy = vector2D_add(currxy, vector2D_scalarmult(roadMargin, side1));
+
+
+	// n.b. length-2, last step is special case
+	for (var rind = 0; rind<route.length-1; rind++) {
+
+	    // each curve need coordinates of three nodes
+	    curr = route[rind].from;
+	    next = route[rind].to;
+	    nextnext = route[rind+1].to;
+
+	    fwd1 = prevfwd;
+	    side1 = prevside;
+	    len1 = prevlen;
+	    
+	    nextxy = placeHash[next];
+	    nextnextxy = placeHash[nextnext];
+
+	    // first edge of the curve we have from the prev-variables,
+	    // this determines the second one
+	    var fwd2 = vector2D_add(nextnextxy, vector2D_neg(nextxy));
+	    var len2 = vector2D_norm(fwd2);
+	    fwd2 = vector2D_scalarmult(1/len2, fwd2);
+	    var side2 = [-fwd2[YIND], fwd2[XIND]]; 
+
+
+	    // reuse the end point of current curve
+	    var contxy, contlen;
+
+	    // end of the first edge and the beginning of the second
+	    var end1xy, start2xy;
+
+
+	    if (nextnext==curr) {
+		// U-turn
+		//
+		// edge1 start -- edge 1 end -- small extra line -- edge 2 start      
+		end1xy = vector2D_add(prevxy, vector2D_scalarmult(len1+uturnMargin, fwd1));
+		start2xy = vector2D_add(nextxy, vector2D_scalarmult(roadMargin,side2));
+		var apu = vector2D_add(start2xy, vector2D_scalarmult(-uturnMargin,fwd2));
+
+		vertices.push(prevxy[0], prevxy[1], zCoord);
+		vertices.push(end1xy[0], end1xy[1], zCoord);
+		vertices.push(apu[0], apu[1], zCoord);
+		vertices.push(start2xy[0], start2xy[1], zCoord);
+
+		contxy = start2xy;
+		contlen = len2;
+	    } // endif: u-turn
+	    else 
+	    {
+		// inner or outer curve
+		/*
+		 end of edge 1 and start of edge 2 coincide at start2xy,
+		 which is determined with the help of the system of equations
+		   H2^2==q1^2+q2^2-2*q1*q2*cospiminusphi
+		   L1^2+q1^2==h1^2
+		   L2^2+q2^2==h1^2
+		 which describes a quadrilateral with one corner at node 2
+		 (where edges 1 and 2 meet at angle phi),
+		 sides L1 and L2 (which both reduce to L1 in this case)
+		 perpendicular to edges 1 and 2 respectively, and the 
+		 side q1 to be determined (q2 and h2 are solved as side product but not needed)
+		*/
+		var L1=roadMargin; 
+		var cosphi=vector2D_dotprod(side1,side2);
+		var H22=L1**2+L1**2-2*L1*L1*cosphi;
+		var P=(-cosphi)**2-1;
+		var q2=Math.sqrt(1/2)*Math.sqrt(((-H22)-H22*(-cosphi))/P);
+
+		// if dealing with an outer curve, move outwards, not inwards
+		// dot product test is positive if edge 2 normal and edge 1 points 
+		// roughly away from each other
+		if (vector2D_dotprod(fwd1,side2) > 0)
+		{ q2=-q2; }
+
+		// follow L1 from node 2 location, then q2 to curve point
+		start2xy = vector2D_add(nextxy, vector2D_add( vector2D_scalarmult(roadMargin,side2), 
+							      vector2D_scalarmult(q2,fwd2)));
+
+		vertices.push(prevxy[0],prevxy[1],zCoord);
+		vertices.push(start2xy[0],start2xy[1],zCoord);
+
+		contxy = start2xy;
+		contlen = len2-q2;
+
+	    }  // endif: inner or outer curve
+
+	    prevxy = contxy;
+	    prevfwd = fwd2;
+	    prevside = side2;
+	    prevlen = contlen;
+
+	} // endfor: edges
+
+	// last section is a straight line
+	next = route[route.length-1].to;
+	nextxy = placeHash[next];
+	start2xy = vector2D_add(nextxy, vector2D_scalarmult(roadMargin,prevside));
+	vertices.push(prevxy[0],prevxy[1],zCoord);
+	vertices.push(start2xy[0],start2xy[1],zCoord);
+
+
+	// draw route between vertices as a single dashed line
+	var geometry = new THREE.BufferGeometry();
+	geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+	var material = new THREE.LineDashedMaterial( {
+	    color: 'black',
+            gapSize: 5, dashSize: 3,					       
+	    linewidth: 2
+	} );
+	var line = new THREE.Line( geometry, material );
+	container.myScene.add( line );
+
+    } // endif: do we already have route data?
+
+    return container;
+}
+
+// ============================================================
+function drawMap(container) {
+
+    var graphInfo = container.myGraph;
+    var scene = container.myScene;
+    var placeHash = container.myPlaceHash;
+
+    // draw places as circles
+    var node = document.createElementNS( 'http://www.w3.org/2000/svg', 'circle' );
+    node.setAttribute( 'stroke', 'black' );
+    node.setAttribute( 'fill', 'yellow' );
+    node.setAttribute( 'r', '7' );
+
+    // placenames are CSS labels
+    var labelContainer = container.myLabelRenderer.domElement;
+
+    for ( var key in placeHash ) {
+
+	// circle objects
+	var object = new THREE.SVGObject( node.cloneNode() );
+	object.position.x = placeHash[key][0];
+	object.position.y = placeHash[key][1];
+	object.position.z = zCoord; 
+
+	// label objects
+	var placeDiv = document.createElement( 'div' );
+	placeDiv.className = 'label';
+	placeDiv.textContent = key;
+	placeDiv.style.marginTop = '-1em';
+	var placeLabel = new THREE.CSS2DObject( placeDiv );
+	placeLabel.position.set( 0, -10, 0 );
+
+	object.add(placeLabel);
+	labelContainer.appendChild( placeDiv );
+	scene.add( object );
+	
+    }
+
+    // each edge is drawn as a line segment
+    for ( var iind = 0; iind < graphInfo.edges.length; iind ++ ) {
+	var edge = graphInfo.edges[iind]; 
+	var vertices = [];
+	vertices.push( placeHash[edge.start][0], placeHash[edge.start][1], zCoord );
+	vertices.push( placeHash[edge.end][0], placeHash[edge.end][1], zCoord );
+
+	var geometry = new THREE.BufferGeometry();
+	geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+	var material = new THREE.LineBasicMaterial( {
+	    color: edge.color,
+	    linewidth: 5
+	} );
+	var line = new THREE.Line( geometry, material );
+	scene.add( line );
+    }
+    
+    return container;		
+}
+
+// ============================================================
+function svgSetup(container) {
+
+    var w = container.clientWidth;
+    var h = container.clientHeight;
+
+    renderer = new THREE.SVGRenderer();
+    renderer.setSize( w, h );
+    renderer.domElement.style.position = 'absolute'; 
+    container.appendChild( renderer.domElement ); 
+
+    labelRenderer = new THREE.CSS2DRenderer();
+    labelRenderer.setSize( w, h );
+    labelRenderer.domElement.style.position = 'absolute';    
+    labelRenderer.domElement.style.background = 'transparent';
+    container.appendChild( labelRenderer.domElement );
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color( 0xf0f0f0 );
+
+    var camera = new THREE.OrthographicCamera(0, w, 0, h, 1, 1000 );
+    scene.add( camera );
+
+    window.addEventListener( 'resize', onWindowResize, false );
+
+    container.myRenderer = renderer;
+    container.myLabelRenderer = labelRenderer;
+    container.myScene = scene;
+    container.myCamera = camera;
+    container.myRoute = null;
+    container.myInput = []; updateR(); updateG(); updateB(); 
+}
+
+
+// ============================================================
+// update those parts of UI that need graph info
+function UIupdates() { 
+
+    // activate the calculate route button
+    var button = document.getElementById("getRouteButton");
+    button.isActive=1;
+    button.innerHTML="laske reitti";
+
+    // build a menu with place names
+    var list = document.getElementById("placeList");
+    for(var iind = 0; iind < graphInfo.nodes.length; iind++) {
+	var el = document.createElement("option");
+	el.textContent = graphInfo.nodes[iind];
+	el.value = iind;
+	list.appendChild(el);
+    }
+    // initial start node is the first node of the list
+    updateStartNode();
+}
+
+// ============================================================
+function screenUpdates(container) {
+    
+    container.myRenderer.clear();
+
+    // remove old lines and circles before drawing new ones
+    for (var iind=container.myScene.children.length-1; iind>=0; iind--) {
+	var obj = container.myScene.children[iind];
+	container.myScene.remove(obj);
+    }
+    container.myScene.add(container.myCamera);
+
+    // remove old css labels
+    var labelContainer = container.myLabelRenderer.domElement;
+    var oldlen = labelContainer.children.length;
+    while (labelContainer.firstChild) {
+	labelContainer.removeChild(labelContainer.firstChild);
+    }
+
+    // redraw everything
+    container = drawMap(container);
+    container = drawRoute(container);
+    container.myLabelRenderer.render(container.myScene, container.myCamera);
+    container.myRenderer.render(container.myScene, container.myCamera);
+
+    return container;
+}
+
+// ============================================================
+function onWindowResize() { 
+
+    container = document.getElementById("svgCanvasHolder");
+    container.myRenderer.setSize( container.clientWidth, container.clientHeight );
+    container.myLabelRenderer.setSize( container.clientWidth, container.clientHeight );
+    container = updatePlaceCoords(container); container=screenUpdates(container);
+}
+</script>
+
+
+</body>
+
+
+
+</html>

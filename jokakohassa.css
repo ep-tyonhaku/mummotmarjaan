@@ -1,0 +1,89 @@
+/*
+ part of "Käykee joka Kohassa" programming assignment 
+ (c) Eli Parviainen 2019
+*/
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+body {
+    height: 100%;
+    margin: 0% auto;
+    width: 100%;
+    color: #000000;
+}
+
+h1 {
+    font:  100%/1.5em  sans-serif;   
+    font-size: 250%;
+    color: #000000;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* placenames are CSS labels */
+.label {
+    position: absolute; 
+    left: 0;            
+    top: 0;
+    color: black;
+    font-family: sans-serif;
+    padding: 2px;
+    font-size: 90%;    
+    background: rgba( 0, 0, 0, .05 ); 
+}
+
+/* slots hold UI elements (inputs + submit button) */
+.slot {
+    width: 25%;
+    padding: 1em;
+    text-align: top;
+}
+
+.slotHeader {
+    font: 100%/1.5em  sans-serif; 
+    width: 100%;
+    color: #000000;
+    margin-left: 1em;
+}
+
+/* details for different slots */
+#startNodeHolder {
+    text-align: center;
+}
+#timeHolder {
+    text-align: center;
+    font-size: 150%;
+}
+#buttonHolder {
+}
+
+#getRouteButton {
+    width:90%;
+    height:50%;
+    align:center;
+    border-radius: 10px;
+    padding: 10%; 
+    font-size:170%;   
+    font-weight: bold;
+}
+
+/* will hold map and place names */
+#svgCanvasHolder {
+    /* background color is for debugging, normally not visible */
+    background-color:lightblue; 
+    margin-top: 0.5em;
+    margin-bottom: 2em;
+    height:30em; 
+    width:100%;
+}
+
+
+.authorInfo {
+    font-size:70%;
+    margin-left: 1em;
+}
+

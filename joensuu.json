@@ -1,0 +1,204 @@
+{
+    "nodes": [
+        "Outokumpu",
+        "Polvijärvi",
+        "Sotkuma",
+        "Viinijärvi",
+        "Käsämä",
+        "Liperi",
+        "Siikasaari",
+        "Ylämylly",
+        "Marjala",
+        "Joensuu",
+        "Lehmo",
+        "Rantakylä",
+        "Kontiolahti",
+        "Paihola",
+        "Eno",
+        "Reijola",
+        "Kulho",
+        "Niittylahti",
+        "Heinävaara",
+        "Hammaslahti",
+        "Kiihtelysvaara",
+        "Tuupovaara"
+    ],
+    "edges": [
+        {
+            "start": "Outokumpu",
+            "end": "Polvijärvi",
+            "color": "green"
+        },
+{
+            "start": "Outokumpu",
+            "end": "Viinijärvi",
+            "color": "green"
+        },
+{
+            "start": "Polvijärvi",
+            "end": "Sotkuma",
+            "color": "green"
+        },
+        {
+            "start": "Sotkuma",
+            "end": "Marjala",
+            "color": "green"
+        },
+        {
+            "start": "Liperi",
+            "end": "Ylämylly",
+            "color": "green"
+        },
+        {
+            "start": "Kontiolahti",
+            "end": "Eno",
+            "color": "green"
+        },
+        {
+            "start": "Kulho",
+            "end": "Heinävaara",
+            "color": "green"
+        },
+        {
+            "start": "Niittylahti",
+            "end": "Heinävaara",
+            "color": "green"
+        },
+        {
+            "start": "Hammaslahti",
+            "end": "Kiihtelysvaara",
+            "color": "green"
+        },
+        {
+            "start": "Kiihtelysvaara",
+            "end": "Tuupovaara",
+            "color": "green"
+        },
+        {
+            "start": "Sotkuma",
+            "end": "Käsämä",
+            "color": "blue"
+        },
+        {
+            "start": "Käsämä",
+            "end": "Ylämylly",
+            "color": "blue"
+        },
+                {
+            "start": "Marjala",
+            "end": "Lehmo",
+            "color": "blue"
+        },
+                {
+            "start": "Joensuu",
+            "end": "Lehmo",
+            "color": "blue"
+        },
+                {
+            "start": "Lehmo",
+            "end": "Kontiolahti",
+            "color": "blue"
+        },
+                {
+            "start": "Joensuu",
+            "end": "Kulho",
+            "color": "blue"
+        },
+                {
+            "start": "Reijola",
+            "end": "Kulho",
+            "color": "blue"
+        },
+                {
+            "start": "Niittylahti",
+            "end": "Hammaslahti",
+            "color": "blue"
+        },
+                {
+            "start": "Heinävaara",
+            "end": "Kiihtelysvaara",
+            "color": "blue"
+        },
+        {
+            "start": "Viinijärvi",
+            "end": "Käsämä",
+            "color": "red"
+        },
+                {
+            "start": "Käsämä",
+            "end": "Liperi",
+            "color": "red"
+        },
+                {
+            "start": "Liperi",
+            "end": "Siikasaari",
+            "color": "red"
+        },
+                {
+            "start": "Ylämylly",
+            "end": "Marjala",
+            "color": "red"
+        },
+                {
+            "start": "Marjala",
+            "end": "Joensuu",
+            "color": "red"
+        },
+                {
+            "start": "Joensuu",
+            "end": "Rantakylä",
+            "color": "red"
+        },
+                {
+            "start": "Rantakylä",
+            "end": "Lehmo",
+            "color": "red"
+        },
+                {
+            "start": "Joensuu",
+            "end": "Reijola",
+            "color": "red"
+        },
+                {
+            "start": "Reijola",
+            "end": "Niittylahti",
+            "color": "red"
+        },
+                {
+            "start": "Kontiolahti",
+            "end": "Paihola",
+            "color": "red"
+        },
+                {
+            "start": "Paihola",
+            "end": "Eno",
+            "color": "red"
+        }
+    ],
+
+    "coordinates": [
+       { "node":"Outokumpu","x":30,"y":85 },
+       { "node":"Polvijärvi","x":215,"y":40 },
+       { "node":"Sotkuma","x":205,"y":140 },
+       { "node":"Viinijärvi","x":90,"y":200 },
+       { "node":"Käsämä","x":170,"y":235 },
+       { "node":"Liperi","x":180,"y":340 },
+       { "node":"Siikasaari","x":165,"y":410 },
+       { "node":"Ylämylly","x":275,"y":240 },
+       { "node":"Marjala","x":340,"y":180 },
+       { "node":"Joensuu","x":390,"y":255 },
+       { "node":"Lehmo","x":420,"y":150 },
+       { "node":"Rantakylä","x":435,"y":210 },
+       { "node":"Kontiolahti","x":435,"y":55 },
+       { "node":"Paihola","x":520,"y":130 },
+       { "node":"Eno","x":570,"y":45 },
+       { "node":"Reijola","x":435,"y":300 },
+       { "node":"Kulho","x":500,"y":235 },
+       { "node":"Niittylahti","x":455,"y":370 },
+       { "node":"Heinävaara","x":615,"y":300 },
+       { "node":"Hammaslahti","x":510,"y":455 },
+       { "node":"Kiihtelysvaara","x":655,"y":380 },
+       { "node":"Tuupovaara","x":760,"y":385 }
+    ]
+
+}
